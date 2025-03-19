@@ -8,6 +8,7 @@ mkdir -p $NGINX_DIR/sbin
 mkdir -p $NGINX_DIR/lib
 mkdir -p $NGINX_DIR/conf
 mkdir -p $NGINX_DIR/logs
+mkdir -p /var/log/nginx  # Aggiungi questa directory per supportare il percorso del log predefinito
 mkdir -p /etc/ssl/nginx
 
 # Copia i file
@@ -25,22 +26,23 @@ if [ ! -f /etc/ssl/nginx/server.crt ]; then
     chmod 600 /etc/ssl/nginx/server.key
 fi
 
-# Modifica il file nginx.conf per cambiare l'utente e i percorsi
+# Modifica il file nginx.conf per cambiare l'utente
 sed -i 's/^user  nginx;/user  root;/' $NGINX_DIR/conf/nginx.conf
-sed -i 's|error_log  logs/error.log|error_log  /opt/nginx-custom/logs/error.log|g' $NGINX_DIR/conf/nginx.conf
-sed -i 's|access_log  logs/access.log|access_log  /opt/nginx-custom/logs/access.log|g' $NGINX_DIR/conf/nginx.conf
-sed -i 's|pid        logs/nginx.pid|pid        /opt/nginx-custom/logs/nginx.pid|g' $NGINX_DIR/conf/nginx.conf
 
 # Correggi i percorsi nei file di configurazione di odoo
 sed -i 's/uri\\;/uri;/g' $NGINX_DIR/conf/conf.d/odoo.conf
 sed -i 's/odoo\\;/odoo;/g' $NGINX_DIR/conf/conf.d/odoo.conf
 sed -i 's/polling\\;/polling;/g' $NGINX_DIR/conf/conf.d/odoo.conf
 
+# Crea un link simbolico alla configurazione per supportare il percorso predefinito
+mkdir -p /etc/nginx
+ln -sf $NGINX_DIR/conf/nginx.conf /etc/nginx/nginx.conf
+
 # Crea script wrapper
 cat > /usr/local/bin/nginx << EOW
 #!/bin/bash
 export LD_LIBRARY_PATH=$NGINX_DIR/lib:\$LD_LIBRARY_PATH
-$NGINX_DIR/sbin/nginx -p $NGINX_DIR \$@
+$NGINX_DIR/sbin/nginx \$@
 EOW
 
 chmod +x /usr/local/bin/nginx
@@ -53,10 +55,10 @@ After=network-online.target
 
 [Service]
 Type=forking
-ExecStartPre=/opt/nginx-custom/sbin/nginx -t -p $NGINX_DIR
-ExecStart=/opt/nginx-custom/sbin/nginx -p $NGINX_DIR
-ExecReload=/opt/nginx-custom/sbin/nginx -s reload -p $NGINX_DIR
-ExecStop=/opt/nginx-custom/sbin/nginx -s stop -p $NGINX_DIR
+ExecStartPre=/opt/nginx-custom/sbin/nginx -t
+ExecStart=/opt/nginx-custom/sbin/nginx
+ExecReload=/opt/nginx-custom/sbin/nginx -s reload
+ExecStop=/opt/nginx-custom/sbin/nginx -s stop
 Environment="LD_LIBRARY_PATH=$NGINX_DIR/lib"
 
 [Install]
@@ -76,10 +78,10 @@ chmod 700 $NGINX_DIR/fastcgi_temp
 chmod 700 $NGINX_DIR/uwsgi_temp
 chmod 700 $NGINX_DIR/scgi_temp
 
-# Assicura che i log esistano e abbiano i permessi corretti
-touch $NGINX_DIR/logs/error.log
-touch $NGINX_DIR/logs/access.log
-chmod 644 $NGINX_DIR/logs/*.log
+# Crea il file di log nella posizione dove nginx lo cerca
+touch /var/log/nginx/error.log
+touch /var/log/nginx/access.log
+chmod 644 /var/log/nginx/*.log
 
 # Avvia servizio
 systemctl daemon-reload

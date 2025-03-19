@@ -8,8 +8,9 @@ mkdir -p $NGINX_DIR/sbin
 mkdir -p $NGINX_DIR/lib
 mkdir -p $NGINX_DIR/conf
 mkdir -p $NGINX_DIR/logs
-mkdir -p /var/log/nginx  # Aggiungi questa directory per supportare il percorso del log predefinito
+mkdir -p /var/log/nginx
 mkdir -p /etc/ssl/nginx
+mkdir -p /etc/nginx/conf.d
 
 # Copia i file
 cp -r binaries/* $NGINX_DIR/sbin/
@@ -34,9 +35,13 @@ sed -i 's/uri\\;/uri;/g' $NGINX_DIR/conf/conf.d/odoo.conf
 sed -i 's/odoo\\;/odoo;/g' $NGINX_DIR/conf/conf.d/odoo.conf
 sed -i 's/polling\\;/polling;/g' $NGINX_DIR/conf/conf.d/odoo.conf
 
-# Crea un link simbolico alla configurazione per supportare il percorso predefinito
-mkdir -p /etc/nginx
-ln -sf $NGINX_DIR/conf/nginx.conf /etc/nginx/nginx.conf
+# Copia tutti i file di configurazione in /etc/nginx/
+cp -f $NGINX_DIR/conf/nginx.conf /etc/nginx/
+cp -f $NGINX_DIR/conf/mime.types /etc/nginx/
+cp -f $NGINX_DIR/conf/fastcgi_params /etc/nginx/
+cp -f $NGINX_DIR/conf/scgi_params /etc/nginx/
+cp -f $NGINX_DIR/conf/uwsgi_params /etc/nginx/
+cp -f $NGINX_DIR/conf/conf.d/* /etc/nginx/conf.d/
 
 # Crea script wrapper
 cat > /usr/local/bin/nginx << EOW
@@ -78,7 +83,7 @@ chmod 700 $NGINX_DIR/fastcgi_temp
 chmod 700 $NGINX_DIR/uwsgi_temp
 chmod 700 $NGINX_DIR/scgi_temp
 
-# Crea il file di log nella posizione dove nginx lo cerca
+# Crea i file di log
 touch /var/log/nginx/error.log
 touch /var/log/nginx/access.log
 chmod 644 /var/log/nginx/*.log

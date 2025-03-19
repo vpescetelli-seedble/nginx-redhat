@@ -11,6 +11,18 @@ mkdir -p $NGINX_DIR/logs
 mkdir -p /var/log/nginx
 mkdir -p /etc/ssl/nginx
 mkdir -p /etc/nginx/conf.d
+mkdir -p /var/cache/nginx/client_temp
+mkdir -p /var/cache/nginx/proxy_temp
+mkdir -p /var/cache/nginx/fastcgi_temp
+mkdir -p /var/cache/nginx/uwsgi_temp
+mkdir -p /var/cache/nginx/scgi_temp
+
+# Imposta i permessi corretti per le directory
+chmod 700 /var/cache/nginx/client_temp
+chmod 700 /var/cache/nginx/proxy_temp
+chmod 700 /var/cache/nginx/fastcgi_temp
+chmod 700 /var/cache/nginx/uwsgi_temp
+chmod 700 /var/cache/nginx/scgi_temp
 
 # Copia i file
 cp -r binaries/* $NGINX_DIR/sbin/
@@ -36,7 +48,7 @@ sed -i 's/odoo\\;/odoo;/g' $NGINX_DIR/conf/conf.d/odoo.conf
 sed -i 's/polling\\;/polling;/g' $NGINX_DIR/conf/conf.d/odoo.conf
 
 # Copia tutti i file di configurazione in /etc/nginx/
-cp -f $NGINX_DIR/conf/nginx.conf /etc/nginx/
+cp -f $NGINX_DIR/conf/nginx.conf /etc/nginx/ 2>/dev/null || true
 cp -f $NGINX_DIR/conf/mime.types /etc/nginx/
 cp -f $NGINX_DIR/conf/fastcgi_params /etc/nginx/
 cp -f $NGINX_DIR/conf/scgi_params /etc/nginx/
@@ -69,19 +81,6 @@ Environment="LD_LIBRARY_PATH=$NGINX_DIR/lib"
 [Install]
 WantedBy=multi-user.target
 EOS
-
-# Crea directory necessarie per nginx
-mkdir -p $NGINX_DIR/logs
-mkdir -p $NGINX_DIR/client_body_temp
-mkdir -p $NGINX_DIR/proxy_temp
-mkdir -p $NGINX_DIR/fastcgi_temp
-mkdir -p $NGINX_DIR/uwsgi_temp
-mkdir -p $NGINX_DIR/scgi_temp
-chmod 700 $NGINX_DIR/client_body_temp
-chmod 700 $NGINX_DIR/proxy_temp
-chmod 700 $NGINX_DIR/fastcgi_temp
-chmod 700 $NGINX_DIR/uwsgi_temp
-chmod 700 $NGINX_DIR/scgi_temp
 
 # Crea i file di log
 touch /var/log/nginx/error.log

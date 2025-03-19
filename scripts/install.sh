@@ -25,6 +25,17 @@ if [ ! -f /etc/ssl/nginx/server.crt ]; then
     chmod 600 /etc/ssl/nginx/server.key
 fi
 
+# Modifica il file nginx.conf per cambiare l'utente e i percorsi
+sed -i 's/^user  nginx;/user  root;/' $NGINX_DIR/conf/nginx.conf
+sed -i 's|error_log  logs/error.log|error_log  /opt/nginx-custom/logs/error.log|g' $NGINX_DIR/conf/nginx.conf
+sed -i 's|access_log  logs/access.log|access_log  /opt/nginx-custom/logs/access.log|g' $NGINX_DIR/conf/nginx.conf
+sed -i 's|pid        logs/nginx.pid|pid        /opt/nginx-custom/logs/nginx.pid|g' $NGINX_DIR/conf/nginx.conf
+
+# Correggi i percorsi nei file di configurazione di odoo
+sed -i 's/uri\\;/uri;/g' $NGINX_DIR/conf/conf.d/odoo.conf
+sed -i 's/odoo\\;/odoo;/g' $NGINX_DIR/conf/conf.d/odoo.conf
+sed -i 's/polling\\;/polling;/g' $NGINX_DIR/conf/conf.d/odoo.conf
+
 # Crea script wrapper
 cat > /usr/local/bin/nginx << EOW
 #!/bin/bash
@@ -42,10 +53,10 @@ After=network-online.target
 
 [Service]
 Type=forking
-ExecStartPre=/opt/nginx-custom/sbin/nginx -t -p $NGINX_DIR -c $NGINX_DIR/conf/nginx.conf
-ExecStart=/opt/nginx-custom/sbin/nginx -p $NGINX_DIR -c $NGINX_DIR/conf/nginx.conf
-ExecReload=/opt/nginx-custom/sbin/nginx -s reload -p $NGINX_DIR -c $NGINX_DIR/conf/nginx.conf
-ExecStop=/opt/nginx-custom/sbin/nginx -s stop -p $NGINX_DIR -c $NGINX_DIR/conf/nginx.conf
+ExecStartPre=/opt/nginx-custom/sbin/nginx -t -p $NGINX_DIR
+ExecStart=/opt/nginx-custom/sbin/nginx -p $NGINX_DIR
+ExecReload=/opt/nginx-custom/sbin/nginx -s reload -p $NGINX_DIR
+ExecStop=/opt/nginx-custom/sbin/nginx -s stop -p $NGINX_DIR
 Environment="LD_LIBRARY_PATH=$NGINX_DIR/lib"
 
 [Install]
@@ -65,13 +76,10 @@ chmod 700 $NGINX_DIR/fastcgi_temp
 chmod 700 $NGINX_DIR/uwsgi_temp
 chmod 700 $NGINX_DIR/scgi_temp
 
-# Modifica il file nginx.conf per impostare il percorso corretto dei log
-sed -i 's|error_log  logs/error.log|error_log  /opt/nginx-custom/logs/error.log|g' $NGINX_DIR/conf/nginx.conf
-sed -i 's|access_log  logs/access.log|access_log  /opt/nginx-custom/logs/access.log|g' $NGINX_DIR/conf/nginx.conf
-
-# Assicura che i log esistano
+# Assicura che i log esistano e abbiano i permessi corretti
 touch $NGINX_DIR/logs/error.log
 touch $NGINX_DIR/logs/access.log
+chmod 644 $NGINX_DIR/logs/*.log
 
 # Avvia servizio
 systemctl daemon-reload

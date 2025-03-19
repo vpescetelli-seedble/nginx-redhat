@@ -1,6 +1,6 @@
-# Nginx Standalone per Red Hat
+# Nginx redhat per Red Hat
 
-Pacchetto standalone di nginx con tutte le dipendenze incluse per sistemi Red Hat, progettato per ambienti senza accesso esterno ai repository.
+Pacchetto redhat di nginx con tutte le dipendenze incluse per sistemi Red Hat, progettato per ambienti senza accesso esterno ai repository.
 
 ## Contenuto del pacchetto
 - `binaries/`: Contiene gli eseguibili di nginx
@@ -9,10 +9,9 @@ Pacchetto standalone di nginx con tutte le dipendenze incluse per sistemi Red Ha
 - `scripts/`: Contiene lo script di installazione
 
 ## Installazione
-
 1. Clona questa repository:
-git clone https://github.com/vpescete/nginx-standalone.git
-cd nginx-standalone
+git clone https://github.com/vpescete/nginx-redhat.git
+cd nginx-redhat
 
 2. Esegui lo script di installazione:
 sudo ./scripts/install.sh
@@ -22,7 +21,6 @@ nginx -v
 systemctl status nginx
 
 ## Configurazione
-
 I file di configurazione si trovano in `/opt/nginx-custom/conf/`.
 
 Per applicare modifiche alla configurazione:
@@ -33,8 +31,9 @@ sudo systemctl stop nginx
 sudo systemctl disable nginx
 sudo rm -rf /opt/nginx-custom /usr/local/bin/nginx /etc/systemd/system/nginx.service
 sudo systemctl daemon-reload
-## Configurazione Odoo
 
+
+## Configurazione Odoo
 Questo pacchetto include una configurazione pronta per esporre Odoo (porta 8069) sulla porta 443 (HTTPS). La configurazione:
 
 - Reindirizza tutto il traffico HTTP (porta 80) a HTTPS (porta 443)
@@ -43,7 +42,6 @@ Questo pacchetto include una configurazione pronta per esporre Odoo (porta 8069)
 - Configura i parametri proxy corretti per Odoo
 
 ### Personalizzazione
-
 Se necessario, è possibile modificare il file `/opt/nginx-custom/conf/conf.d/odoo.conf` per adattarlo alle proprie esigenze specifiche:
 
 - Cambiare il nome del server
